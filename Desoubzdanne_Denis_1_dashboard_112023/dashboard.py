@@ -39,8 +39,8 @@ model_met1 = pickle.load(open('./ressources/model_met1.sav', 'rb'))
 
 #host:
 
-HOST = 'http://127.0.0.1:8000'     # developement on local server
-#HOST = 'http://20.199.6.50' #Azure 
+#HOST = 'http://127.0.0.1:8000'     # developement on local server
+HOST = 'http://40.115.33.188' #Azure 
 
 
 ## Streamlit ##########
@@ -50,7 +50,7 @@ st.set_page_config(layout="wide")
 ##add images
 col1, col2, col3, col4, col5, col6, col7, col8, col9 = st.columns(9)
 with col1:
-    st.image('./ressources/image1.jpg', width=150)
+    st.image('Image1.jpg', width=150)
 with col2:
     st.write(" ")
 with col3:
@@ -66,7 +66,7 @@ with col7:
 with col8:
     st.write(" ")
 with col9:
-    st.image('./ressources/image2.png', width=140)
+    st.image('Image2.png', width=140)
 
 
 
@@ -104,8 +104,8 @@ def gauge(var, var2):
     number = {"prefix": "Score : ", "suffix": " %"},
     title = {'text': f"Probabilité du client {str(var)} d'être solvable (classe 0))"},
     gauge = {'axis': {'range': [None, 100]},
-            'threshold' : {'line': {'color': choco, 'width': 4}, 'thickness': 0.75, 'value': 61},
-            'bar': {'color': vert if (100-var2) > 61 else rouge}}))
+            'threshold' : {'line': {'color': choco, 'width': 4}, 'thickness': 0.75, 'value': 65},
+            'bar': {'color': vert if (100-var2) > 65 else rouge}}))
             #'bar': {'color': vert if (100-var2) > 61 else rouge}}))
          #   'steps' : [
           #      {'range': [0, 40], 'color': rouge},
