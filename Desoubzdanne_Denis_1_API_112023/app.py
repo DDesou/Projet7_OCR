@@ -39,3 +39,7 @@ def get_prediction(json_client: dict = Body({})):
     df_one_client = pd.Series(json_client).to_frame().transpose()
     probability = pipeline[1].predict_proba(df_one_client)[:, 1][0]
     return {'probability': probability}
+
+
+if __name__ == '__main__':
+    app.run()
