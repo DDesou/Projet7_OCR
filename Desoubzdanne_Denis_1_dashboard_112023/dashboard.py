@@ -12,6 +12,7 @@ shap.initjs()
 
 import lightgbm as lgb
 import lightgbm
+import joblib
 
 # palette
 jaune ='#FFCA18'
@@ -26,21 +27,32 @@ magenta = '#FF00FF'
 pastel = ['#FFE06F','#FF9594','#78CF80','#FFB178','#A7B9FF','#FDE8D8']
 pastel2 = [rouge, jaune, bleu, pink, vert, choco, cyan, orange, magenta]
 
-df_test = pd.read_csv('./ressources/test_sample.csv', index_col=0)
+#load pipeline
+pipeline = joblib.load('./ressources/model.joblib')
+
+
+df_test = pd.read_csv('./ressources/test_samp.csv', index_col=0)
 df_test = df_test.set_index('SK_ID_CURR')
-df_train = pd.read_csv('./ressources/train_sample.csv', index_col=0)
+df_train = pd.read_csv('./ressources/train_samp.csv', index_col=0)
 df_train = df_train.set_index('SK_ID_CURR')
-df_train = df_train.drop(columns=['TARGET'])
-cm_met1 = pd.read_csv('./ressources/cm_met1_sample.csv', index_col=0)
-cm_met1 = cm_met1.set_index('SK_ID_CURR')
+to_keep = ['TARGET', 'proba']
+cm_met1 = df_train.drop(columns=[ele for ele in df_train if ele not in to_keep])
+df_train = df_train.drop(columns=['TARGET', 'proba'])
+col = df_train.columns
+
+df_test2 = pd.DataFrame(pipeline[0].transform(df_test[col]), columns = col)
+df_test2 = df_test2.set_index(pd.Series(list(df_test.index)))
+
+#cm_met1 = pd.read_csv('./ressources/cm_met1_sample.csv', index_col=0)
+#cm_met1 = cm_met1.set_index('SK_ID_CURR')
 
 # load the model + explainer from disk
-model_met1 = pickle.load(open('./ressources/model_met1.sav', 'rb'))
+#model_met1 = pickle.load(open('./ressources/model_met1.sav', 'rb'))
 
 #host:
 
-#HOST = 'http://127.0.0.1:8000'     # developement on local server
-HOST = 'http://40.115.33.188' #Azure 
+HOST = 'http://127.0.0.1:8000'     # developement on local server
+#HOST = 'http://40.115.33.188' #Azure 
 
 
 ## Streamlit ##########
@@ -84,7 +96,7 @@ def get_prediction(id_client: int):
     Returns :
     - probability of default (float).
     """
-    json_client = df_test.loc[int(id_client)].to_json()
+    json_client = df_test2.loc[int(id_client)].to_json()
     response = requests.get(HOST+'/prediction/', data=json_client, timeout=80)
     proba_default = eval(response.content)["probability"]
     print(response.content)
@@ -104,8 +116,8 @@ def gauge(var, var2):
     number = {"prefix": "Score : ", "suffix": " %"},
     title = {'text': f"Probabilité du client {str(var)} d'être solvable (classe 0))"},
     gauge = {'axis': {'range': [None, 100]},
-            'threshold' : {'line': {'color': choco, 'width': 4}, 'thickness': 0.75, 'value': 65},
-            'bar': {'color': vert if (100-var2) > 65 else rouge}}))
+            'threshold' : {'line': {'color': choco, 'width': 4}, 'thickness': 0.75, 'value': 60},
+            'bar': {'color': vert if (100-var2) > 60 else rouge}}))
             #'bar': {'color': vert if (100-var2) > 61 else rouge}}))
          #   'steps' : [
           #      {'range': [0, 40], 'color': rouge},
@@ -155,8 +167,8 @@ st.plotly_chart(kde_fig(ID, feature), use_container_width=True)
 
 ##shap
 def shap_fig(id: int):
-    df = df_test.loc[[id]]
-    explainer = shap.Explainer(model_met1, df_test)
+    df = df_test2.loc[[id]]
+    explainer = shap.TreeExplainer(pipeline[1], pipeline[0].transform(df_test), check_additivity=False)
     shap_values = explainer(df, check_additivity=False)
     st.title(f'SHAP values du client n°{id}')
     st_shap(shap.plots.waterfall(shap_values[0]))
