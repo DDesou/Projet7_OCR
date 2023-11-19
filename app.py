@@ -1,9 +1,9 @@
 """Code to active API"""
 
-import pickle
+#import pickle
 from fastapi import FastAPI, Body
 import uvicorn
-import pandas as pd
+#import pandas as pd
 import joblib
 
 
@@ -40,6 +40,5 @@ def get_prediction(json_client: dict = Body({})):
     probability = pipeline[1].predict_proba(df_one_client)[:, 1][0]
     return {'probability': probability}
 
-
 if __name__ == '__main__':
-    app.run()
+    uvicorn.run('main:app', host='0.0.0.0', port=8000)
